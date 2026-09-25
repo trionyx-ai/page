@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trionyx 庫存管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="mobile-topbar">
+  <div class="mark">TRIONY<span>X</span></div>
+  <button class="btn btn-ghost btn-sm" id="mobile-nav-toggle">選單</button>
+</div>
+
+<div class="app-shell" id="app-shell">
+
+  <aside class="sidebar">
+    <div class="mark">TRIONY<span>X</span></div>
+    <nav>
+      <button class="nav-btn active" data-view="inventory">
+        庫存管理 <span class="tag">STOCK</span>
+      </button>
+      <button class="nav-btn" data-view="handover">
+        建立點交表 <span class="tag">NEW</span>
+      </button>
+      <button class="nav-btn" data-view="history">
+        點交歷史 <span class="tag">LOG</span>
+      </button>
+    </nav>
+    <div class="who">
+      <span class="email" id="who-email">—</span>
+      <button class="btn btn-ghost btn-sm" id="logout-btn" style="padding-left:0;">登出</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ============ 庫存管理 ============ -->
+    <section id="view-inventory" class="view">
+      <div class="main-header">
+        <div>
+          <h1>庫存管理</h1>
+          <div class="desc">記錄每一項物品目前的數量與存放位置</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ghost" id="open-log-btn">異動紀錄</button>
+          <button class="btn btn-amber" id="add-item-btn">＋ 新增品項</button>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="n" id="stat-total-items">0</div><div class="l">品項數</div></div>
+        <div class="stat"><div class="n" id="stat-total-qty">0</div><div class="l">總數量</div></div>
+        <div class="stat"><div class="n" id="stat-low-stock">0</div><div class="l">低庫存(≤3)</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <input type="text" id="inventory-search" placeholder="搜尋品名 / 編號 / 位置…">
+          </div>
+          <div class="mono" style="font-size:12.5px;color:var(--ink-soft)" id="inventory-count">共 0 筆</div>
+          <button class="btn btn-ghost btn-sm" id="export-excel-btn">匯出 Excel</button>
+        </div>
+        <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>品名</th>
+              <th>編號</th>
+              <th class="num">數量</th>
+              <th>存放位置</th>
+              <th>分類</th>
+              <th>備註</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="inventory-tbody"></tbody>
+        </table>
+        </div>
+        <div class="empty-state hidden" id="inventory-empty">
+          <div class="big">目前沒有任何品項</div>
+          <div>按右上角「＋ 新增品項」開始建立庫存清冊</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 建立點交表 ============ -->
+    <section id="view-handover" class="view hidden">
+      <div class="main-header">
+        <div>
+          <h1>建立點交表</h1>
+          <div class="desc">選擇要交給客戶的品項與數量,產生可列印/存 PDF 的點交確認單</div>
+        </div>
+      </div>
+
+      <div class="panel panel-pad">
+        <div class="field-row">
+          <div class="field">
+            <label for="ho-customer">客戶 / 收件單位</label>
+            <input type="text" id="ho-customer">
+          </div>
+          <div class="field">
+            <label for="ho-contact">聯絡人 / 電話（選填）</label>
+            <input type="text" id="ho-contact">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="ho-date">交貨日期</label>
+            <input type="date" id="ho-date">
+          </div>
+          <div class="field">
+            <label for="ho-deliverer">交付人（你）</label>
+            <input type="text" id="ho-deliverer" placeholder="會自動帶入你的姓名">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel panel-pad">
+        <h2 style="font-size:15px;margin-bottom:14px;">選擇品項</h2>
+        <div class="handover-picker">
+          <div>
+            <div class="search-box" style="max-width:none;margin-bottom:10px;">
+              <input type="text" id="ho-search" placeholder="搜尋庫存品項…">
+            </div>
+            <div class="pick-list" id="ho-pick-list"></div>
+          </div>
+          <div>
+            <div class="field-hint" style="margin-bottom:10px;">已加入點交表的品項</div>
+            <div class="line-items" id="ho-line-items">
+              <div class="empty-state" style="padding:24px 14px;">尚未加入任何品項</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel panel-pad">
+        <div class="field">
+          <label for="ho-notes">備註（選填）</label>
+          <textarea id="ho-notes" rows="3" placeholder="例如:分兩箱運送、含配件說明書…"></textarea>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-soft);margin-bottom:16px;">
+          <input type="checkbox" id="ho-deduct" checked style="width:16px;height:16px;">
+          產生點交表後,自動從庫存扣除對應數量
+        </label>
+        <div class="field-error" id="ho-error"></div>
+        <button class="btn btn-primary" id="ho-generate-btn">產生點交表並準備列印</button>
+      </div>
+    </section>
+
+    <!-- ============ 點交歷史 ============ -->
+    <section id="view-history" class="view hidden">
+      <div class="main-header">
+        <div>
+          <h1>點交歷史</h1>
+          <div class="desc">所有已產生的點交紀錄,可重新查看或列印</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>單號</th>
+              <th>客戶</th>
+              <th>日期</th>
+              <th class="num">品項數</th>
+              <th>交付人</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+        </div>
+        <div class="empty-state hidden" id="history-empty">
+          <div class="big">還沒有任何點交紀錄</div>
+          <div>到「建立點交表」產生第一張確認單</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ 異動紀錄 Modal ============ -->
+<div class="modal-overlay hidden" id="log-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <h3>異動紀錄</h3>
+      <button class="close-x" id="log-modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:60vh;overflow-y:auto;padding:0;">
+      <table>
+        <thead>
+          <tr>
+            <th>時間</th>
+            <th>使用者</th>
+            <th>動作</th>
+            <th>品項</th>
+            <th>內容</th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="log-empty" style="padding:24px;">
+        <div>還沒有任何異動紀錄</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="log-modal-close-2">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 新增/編輯品項 Modal ============ -->
+<div class="modal-overlay hidden" id="item-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="item-modal-title">新增品項</h3>
+      <button class="close-x" id="item-modal-close">✕</button>
+    </div>
+    <form id="item-form">
+      <div class="modal-body">
+        <input type="hidden" id="item-id">
+        <div class="field">
+          <label for="item-name">品名（中文）*</label>
+          <input type="text" id="item-name" required>
+        </div>
+        <div class="field">
+          <label for="item-name-en">英文品名（點交表列印用，選填）</label>
+          <input type="text" id="item-name-en" placeholder="e.g. HEPA Filter">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="item-sku">編號（選填）</label>
+            <input type="text" id="item-sku" placeholder="例如:A-1023">
+          </div>
+          <div class="field">
+            <label for="item-qty">數量 *</label>
+            <input type="number" id="item-qty" min="0" step="1" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="item-location">存放位置 *</label>
+          <input type="text" id="item-location" list="location-options" required placeholder="選擇或輸入新位置">
+          <datalist id="location-options">
+            <option value="Charlie Home">
+            <option value="Sebastian Home">
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="item-category">分類（選填）</label>
+          <input type="text" id="item-category" list="category-options" placeholder="選擇或輸入新分類">
+          <datalist id="category-options">
+            <option value="梯控">
+            <option value="清潔消耗品">
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="item-notes">備註（選填）</label>
+          <textarea id="item-notes" rows="2"></textarea>
+        </div>
+        <div class="field-error" id="item-error"></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="item-cancel-btn">取消</button>
+        <button type="submit" class="btn btn-primary" id="item-save-btn">儲存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ 點交紀錄明細（網站上看，含位置） ============ -->
+<div class="modal-overlay hidden" id="ho-detail-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h3>點交明細</h3>
+      <button class="close-x" id="ho-detail-close">✕</button>
+    </div>
+    <div class="modal-body" id="ho-detail-body"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" id="ho-detail-cancel">關閉</button>
+      <button type="button" class="btn btn-primary" id="ho-detail-print">列印點交表</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 點交表 列印用內容 ============ -->
+<div id="sheet-render"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/inventory.js"></script>
+<script src="assets/handover.js"></script>
+</body>
+</html>

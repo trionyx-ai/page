@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trionyx 庫存管理 — 登入</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="auth-shell">
+
+  <div class="auth-side">
+    <div class="mark">TRIONY<span>X</span></div>
+    <div class="auth-side-image" id="auth-side-image">
+      <!-- 圖片放這裡：之後把 <img src="..."> 加進這個 div 即可 -->
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-card">
+      <h2>歡迎回來</h2>
+      <div class="sub">登入 Trionyx 團隊帳號</div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="login-username">帳號</label>
+          <input type="text" id="login-username" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="login-password">密碼</label>
+          <input type="password" id="login-password" required autocomplete="current-password">
+        </div>
+        <div class="field-error" id="login-error"></div>
+        <button type="submit" class="btn btn-primary auth-submit" id="login-submit">登入</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script src="assets/auth.js"></script>
+</body>
+</html>
